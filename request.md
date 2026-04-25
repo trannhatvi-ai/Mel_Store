@@ -1,0 +1,2 @@
+- Thêm vào setting chỗ để admin lưu google auth api key, database_url, chỗ để admin chỉnh system prompt.
+- Trang giới thiệu và liên hệ không có phần header vậy?

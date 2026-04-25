@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  DRESS
+  SUIT
+  PACKAGE
+}
+
+enum OrderStatus {
+  AWAITING_DEPOSIT
+  PAID
+  SERVICE_ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  slug         String      @unique
+  name         Json        // { en: string, vi: string }
+  category     Category
+  price        Int         // VND
+  pricePerDay  Boolean     @default(false)
+  image        String
+  gallery      String[]
+  description  Json        // { en: string, vi: string }
+  details      Json        // { en: string[], vi: string[] }
+  available    Boolean     @default(true)
+  trending     Boolean     @default(false)
+  discount     Int         @default(0)
+  orderItems   OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique // e.g. ML-2412
+  customer    String
+  email       String
+  phone       String
+  items       OrderItem[]
+  total       Int
+  deposit     Int
+  status      OrderStatus @default(AWAITING_DEPOSIT)
+  eventDate   DateTime
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  qty       Int
+  price     Int     // Price at the time of order
+  days      Int?    // For rentals
+}
