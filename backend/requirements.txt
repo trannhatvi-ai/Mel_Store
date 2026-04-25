@@ -19,6 +19,7 @@ langchain-postgres
 langgraph
 google-genai
 langchain-google-genai
+langchain_openai
 httpx
 asyncpg
 oauthlib
