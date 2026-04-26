@@ -1,6 +1,7 @@
 import httpx
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -27,19 +28,24 @@ async def _chat_with_ollama(model: str, system_prompt: str, prompt: str) -> str:
 async def _chat_with_openai(model: str, system_prompt: str, prompt: str) -> str:
     if not settings.openai_api_key:
         return "OPENAI_API_KEY is not configured."
-    headers = {"Authorization": f"Bearer {settings.openai_api_key}"}
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
-        ],
-    }
-    async with httpx.AsyncClient(timeout=45) as client:
-        res = await client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-        res.raise_for_status()
-        body = res.json()
-        return body["choices"][0]["message"]["content"].strip()
+    llm = ChatOpenAI(model=model, api_key=settings.openai_api_key, temperature=0.2)
+    res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
+    return str(res.content).strip()
+
+
+async def _chat_with_phi4(model: str, system_prompt: str, prompt: str) -> str:
+    if not settings.phi4_api_key:
+        return "PHI4_API_KEY is not configured."
+    # Phi-4 via LangChain (assuming OpenAI-compatible endpoint or specialized provider)
+    # Using ChatOpenAI as a generic wrapper for Phi-4 if it's hosted on an OpenAI-compatible API
+    llm = ChatOpenAI(
+        model=model, 
+        api_key=settings.phi4_api_key, 
+        # base_url="...", # Add base URL if needed
+        temperature=0.2
+    )
+    res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
+    return str(res.content).strip()
 
 
 async def _chat_with_gemini(model: str, system_prompt: str, prompt: str) -> str:
@@ -58,6 +64,8 @@ async def generate_admin_configured_answer(db: Session, prompt: str, locale: str
             return await _chat_with_ollama(model, system_prompt, prompt)
         if provider == "openai":
             return await _chat_with_openai(model, system_prompt, prompt)
+        if provider == "phi4":
+            return await _chat_with_phi4(model, system_prompt, prompt)
         return await _chat_with_gemini(model, system_prompt, prompt)
     except Exception:
         return "I couldn't generate a response from the configured model."

@@ -53,6 +53,7 @@ async def get_model_catalog() -> tuple[list[ProviderOption], list[ProviderOption
         ProviderOption(id="ollama", label="Local Ollama", models=_as_options(ollama_models)),
         ProviderOption(id="gemini", label="Gemini", models=_as_options(DEFAULT_GEMINI_CHAT)),
         ProviderOption(id="openai", label="ChatGPT", models=_as_options(openai_chat_models)),
+        ProviderOption(id="phi4", label="Microsoft Phi-4", models=_as_options(["phi-4"])),
     ]
     embedding_providers = [
         ProviderOption(id="ollama", label="Local Ollama", models=_as_options(ollama_models)),

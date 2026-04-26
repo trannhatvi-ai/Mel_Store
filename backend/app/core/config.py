@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     database_url: str = Field(alias="DATABASE_URL")
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    phi4_api_key: str = Field(default="", alias="PHI4_API_KEY")
     ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
 
     telegram_bot_token: str | None = Field(default=None, alias="TELEGRAM_BOT_TOKEN")
