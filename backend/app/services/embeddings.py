@@ -25,15 +25,15 @@ def _embed_with_ollama(model: str, text: str) -> list[float]:
         return res.json().get("embedding", [])
 
 
-def embed_query(text: str, provider: str = "gemini", model: str = "models/text-embedding-004") -> list[float]:
+def embed_query(text: str, provider: str = "gemini", model: str = "models/gemini-embedding-2") -> list[float]:
     if provider == "openai":
         client = get_openai_embedding_client(model)
         vector = client.embed_query(text)
     elif provider == "ollama":
         vector = _embed_with_ollama(model, text)
     else:
-        if model == "gemini-embedding-001":
-            model = "models/text-embedding-004"
+        if model == "gemini-embedding-001" or "text-embedding" in model:
+            model = "models/gemini-embedding-2"
         client = get_gemini_embedding_client(model)
         vector = client.embed_query(text)
     if len(vector) > settings.embedding_dimension:
