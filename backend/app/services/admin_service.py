@@ -234,3 +234,24 @@ def delete_user(db: Session, user_id: str) -> tuple[bool, str]:
         db.rollback()
         return False, "in_use"
 
+
+def delete_order(db: Session, order_id: str) -> tuple[bool, str]:
+    order = db.get(Order, order_id)
+    if not order:
+        return False, "not_found"
+    try:
+        db.delete(order)
+        db.commit()
+        return True, "deleted"
+    except IntegrityError:
+        db.rollback()
+        return False, "in_use"
+
+def bulk_delete_orders(db: Session, order_ids: list[str]) -> int:
+    orders = db.query(Order).filter(Order.id.in_(order_ids)).all()
+    count = 0
+    for o in orders:
+        db.delete(o)
+        count += 1
+    db.commit()
+    return count

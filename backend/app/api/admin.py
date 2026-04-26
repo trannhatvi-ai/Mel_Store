@@ -19,6 +19,7 @@ from app.schemas.admin import (
     UserDTO,
     LoginRequestDTO,
     CategoryDTO,
+    BulkDeleteRequestDTO,
 )
 from app.services.admin_service import (
     delete_product,
@@ -36,6 +37,8 @@ from app.services.admin_service import (
     get_all_users,
     upsert_user,
     delete_user,
+    delete_order,
+    bulk_delete_orders,
 )
 from app.services.model_catalog import get_model_catalog
 from app.services.chat_models import test_admin_configured_model
@@ -327,7 +330,21 @@ async def send_order_reminder(order_id: str, db: Session = Depends(get_db)):
         f"status: {o.status.value}. Please follow up."
     )
     await notify_human_support(message)
-    return {"success": True}
+
+@router.delete("/orders/{order_id}")
+def remove_order(order_id: str, db: Session = Depends(get_db)):
+    success, reason = delete_order(db, order_id)
+    if success:
+        return {"success": True}
+    if reason == "not_found":
+        raise HTTPException(status_code=404, detail="Order not found")
+    raise HTTPException(status_code=500, detail="Failed to delete order")
+
+
+@router.post("/orders/bulk-delete")
+def remove_orders_bulk(payload: BulkDeleteRequestDTO, db: Session = Depends(get_db)):
+    count = bulk_delete_orders(db, payload.ids)
+    return {"success": True, "count": count}
 
 
 @router.post("/login")

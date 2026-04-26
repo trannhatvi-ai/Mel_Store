@@ -132,3 +132,6 @@ class UserDTO(BaseModel):
 class LoginRequestDTO(BaseModel):
     identifier: str
     password: str
+
+class BulkDeleteRequestDTO(BaseModel):
+    ids: list[str]

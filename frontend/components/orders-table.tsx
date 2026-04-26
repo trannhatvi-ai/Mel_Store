@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronDown, Search, Eye, X, Phone, Mail } from "lucide-react"
+import { ChevronDown, Search, Eye, X, Phone, Mail, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { type Order, type OrderStatus, formatVND } from "@/lib/data"
 import { OrderStatusBadge } from "@/components/order-status-badge"
@@ -34,7 +34,8 @@ export function OrdersTable() {
   const [sortDesc, setSortDesc] = useState(true)
   const [active, setActive] = useState<any | null>(null)
   const [fetching, setFetching] = useState(true)
-  const [submittingAction, setSubmittingAction] = useState<"paid" | "reminder" | null>(null)
+  const [submittingAction, setSubmittingAction] = useState<"paid" | "reminder" | "delete" | "status" | "bulk-delete" | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
 
@@ -102,6 +103,82 @@ export function OrdersTable() {
     }
   }
 
+  async function handleDeleteOrder() {
+    if (!active) return
+    if (!confirm(`Bạn có chắc chắn muốn xóa đơn hàng ${active.id}? Hành động này không thể hoàn tác.`)) return
+
+    setSubmittingAction("delete")
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/admin/orders/${active.id}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        throw new Error(payload?.detail || "Xóa đơn hàng thất bại")
+      }
+      setOrders((prev) => prev.filter((o) => o.id !== active.id))
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(active.id)
+        return next
+      })
+      toast({ title: "Đã xóa đơn hàng", description: `Đơn hàng ${active.id} đã được loại bỏ.` })
+      setActive(null)
+    } catch (err) {
+      toast({
+        title: "Không thể xóa",
+        description: err instanceof Error ? err.message : "Vui lòng thử lại.",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmittingAction(null)
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    if (!confirm(`Xác nhận xóa ${selectedIds.size} đơn hàng đã chọn? Thao tác này không thể hoàn tác.`)) return
+
+    setSubmittingAction("bulk-delete")
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/admin/orders/bulk-delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      })
+      if (!res.ok) throw new Error("Xóa hàng loạt thất bại")
+      
+      setOrders((prev) => prev.filter((o) => !selectedIds.has(o.id)))
+      toast({ title: "Đã xóa", description: `Đã loại bỏ ${selectedIds.size} đơn hàng thành công.` })
+      setSelectedIds(new Set())
+    } catch (err) {
+      toast({
+        title: "Lỗi xóa hàng loạt",
+        description: err instanceof Error ? err.message : "Vui lòng thử lại.",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmittingAction(null)
+    }
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === list.length && list.length > 0) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(list.map((o) => o.id)))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const list = useMemo(() => {
     let l = orders.slice()
     if (filter !== "All") l = l.filter((o) => o.status === filter)
@@ -141,6 +218,19 @@ export function OrdersTable() {
             </button>
           ))}
         </div>
+        
+        {selectedIds.size > 0 && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={handleBulkDelete}
+            disabled={submittingAction === "bulk-delete"}
+            className="ml-auto inline-flex items-center gap-2 rounded-full bg-destructive px-4 py-2 text-xs font-medium text-destructive-foreground shadow-sm hover:bg-destructive/90 disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Xóa {selectedIds.size} mục
+          </motion.button>
+        )}
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-border bg-card">
@@ -148,6 +238,14 @@ export function OrdersTable() {
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-cream-deep/40 text-left text-xs uppercase tracking-[0.16em] text-charcoal-soft">
               <tr>
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                    checked={list.length > 0 && selectedIds.size === list.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="px-4 py-3 font-medium">Đơn hàng</th>
                 <th className="px-4 py-3 font-medium">Khách hàng</th>
                 <th className="px-4 py-3 font-medium">Sản phẩm</th>
@@ -195,7 +293,15 @@ export function OrdersTable() {
                 </tr>
               ) : (
                 list.map((o) => (
-                  <tr key={o.id} className="border-b border-border/60 last:border-0 hover:bg-cream-deep/30">
+                  <tr key={o.id} className={`border-b border-border/60 last:border-0 hover:bg-cream-deep/30 ${selectedIds.has(o.id) ? "bg-primary/5" : ""}`}>
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                        checked={selectedIds.has(o.id)}
+                        onChange={() => toggleSelect(o.id)}
+                      />
+                    </td>
                     <td className="px-4 py-4 font-medium">{o.id}</td>
                     <td className="px-4 py-4">
                       <p>{o.customer}</p>
@@ -339,6 +445,15 @@ export function OrdersTable() {
                     className="rounded-full border border-border px-5 py-3 text-sm font-medium hover:bg-cream-deep disabled:opacity-50"
                   >
                     {submittingAction === "reminder" ? "Đang gửi..." : "Gửi nhắc nhở"}
+                  </button>
+
+                  <button
+                    onClick={() => void handleDeleteOrder()}
+                    disabled={submittingAction !== null}
+                    className="mt-2 flex items-center justify-center gap-2 rounded-full border border-destructive/30 bg-destructive/5 px-5 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                    {submittingAction === "delete" ? "Đang xóa..." : "Xóa đơn hàng"}
                   </button>
                 </div>
               </div>
