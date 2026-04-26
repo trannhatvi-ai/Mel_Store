@@ -16,7 +16,18 @@ DEFAULT_OPENAI_EMBED = ["text-embedding-3-small", "text-embedding-3-large"]
 
 
 def _as_options(ids: Iterable[str]) -> list[ModelOption]:
-    return [ModelOption(id=model_id, label=model_id) for model_id in sorted(set(ids))]
+    options = []
+    for model_id in sorted(set(ids)):
+        label = model_id
+        if model_id == "text-embedding-3-small":
+            label = "OpenAI Text Embedding 3 (Small)"
+        elif model_id == "text-embedding-3-large":
+            label = "OpenAI Text Embedding 3 (Large)"
+        elif model_id.startswith("gpt-"):
+            label = model_id.upper()
+        
+        options.append(ModelOption(id=model_id, label=label))
+    return options
 
 
 async def _fetch_ollama_models() -> list[str]:
@@ -54,6 +65,7 @@ async def get_model_catalog() -> tuple[list[ProviderOption], list[ProviderOption
         ProviderOption(id="gemini", label="Gemini", models=_as_options(DEFAULT_GEMINI_CHAT)),
         ProviderOption(id="openai", label="ChatGPT", models=_as_options(openai_chat_models)),
         ProviderOption(id="phi4", label="Microsoft Phi-4", models=_as_options(["phi-4"])),
+        ProviderOption(id="phi4_reasoning", label="Microsoft Phi-4 Reasoning", models=_as_options(["Phi-4-multimodal-instruct"])),
     ]
     embedding_providers = [
         ProviderOption(id="ollama", label="Local Ollama", models=_as_options(ollama_models)),
