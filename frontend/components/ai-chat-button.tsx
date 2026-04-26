@@ -132,7 +132,7 @@ export function AiChatButton() {
               {messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
+                  className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                     m.role === "ai"
                       ? "self-start bg-cream-deep text-foreground"
                       : "self-end bg-primary/40 text-foreground"

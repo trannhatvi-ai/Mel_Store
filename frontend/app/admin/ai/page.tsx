@@ -225,7 +225,7 @@ export default function AIPage() {
                 </button>
               </div>
               {testResult && (
-                <div className="mt-4 rounded-lg bg-cream-deep/50 p-4 text-sm leading-relaxed text-charcoal">
+                <div className="mt-4 rounded-lg bg-cream-deep/50 p-4 text-sm leading-relaxed text-charcoal whitespace-pre-wrap">
                   <p className="mb-2 text-[10px] uppercase tracking-widest text-tan-deep">Phản hồi từ {testResult.model}</p>
                   {testResult.answer}
                 </div>
