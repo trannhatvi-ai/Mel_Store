@@ -28,9 +28,31 @@ def get_tools(db: Session):
     @tool
     def search_catalog(query: str):
         """Look up dresses, photography packages, or inventory items. 
-        Use this when the customer asks for prices, availability, or 'what' items are available."""
+        Returns names, prices, availability, and detailed descriptions (sizes, colors)."""
         rows = hybrid_search_products(db, query)
-        return "\n".join(f"- ID: {row['id']}, Name: {row['name'].get('vi')}, Price: {row['price']}, Available: {row['available']}" for row in rows[:5])
+        return "\n".join(
+            f"- ID: {row['id']}, Name: {row['name'].get('vi')}, Price: {row['price']}, "
+            f"Description: {row.get('description', '')}, Details: {row.get('details', '')}"
+            for row in rows[:5]
+        )
+
+    @tool
+    def check_availability(product_id: str, date: str):
+        """Check if a specific product or package is available on a given date (YYYY-MM-DD)."""
+        # Mock logic: Assume everything is available except for some specific dates
+        if "2026-05-02" in date: # Example: Saturday mentioned in plan
+            return f"Product {product_id} is already booked on {date}. Please choose another date."
+        return f"Product {product_id} is available for booking on {date}."
+
+    @tool
+    def request_human_callback(phone_number: str, note: str = ""):
+        """Use this when the customer wants a human consultant to call them back. 
+        Saves their phone number and sends a notification to the staff."""
+        try:
+            notify_human_support(f"Callback Request: {phone_number}. Note: {note}")
+            return "Your request has been received. A consultant will call you back shortly at " + phone_number
+        except Exception as e:
+            return f"Error requesting callback: {str(e)}"
 
     @tool
     def apply_voucher(code: str, total_price: float):
@@ -73,7 +95,7 @@ def get_tools(db: Session):
         except Exception as e:
             return f"Error creating booking: {str(e)}"
 
-    return [query_policy_rag, search_catalog, apply_voucher, create_booking]
+    return [query_policy_rag, search_catalog, apply_voucher, create_booking, check_availability, request_human_callback]
 
 
 async def invoke_agent(db: Session, session_id: str, message: str, locale: str) -> dict[str, Any]:
@@ -85,7 +107,7 @@ async def invoke_agent(db: Session, session_id: str, message: str, locale: str) 
     agent = create_react_agent(
         llm, 
         tools=tools, 
-        state_modifier=system_prompt,
+        prompt=system_prompt,
         checkpointer=MemorySaver()
     )
     

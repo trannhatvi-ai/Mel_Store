@@ -14,7 +14,9 @@ def get_gemini_embedding_client(model: str) -> GoogleGenerativeAIEmbeddings:
 
 @lru_cache
 def get_openai_embedding_client(model: str) -> OpenAIEmbeddings:
-    return OpenAIEmbeddings(model=model, api_key=settings.openai_api_key)
+    api_key = settings.openai_embedding_api_key or settings.openai_api_key
+    base_url = "https://models.inference.ai.azure.com" if api_key.startswith("github_") else None
+    return OpenAIEmbeddings(model=model, api_key=api_key, base_url=base_url)
 
 
 def _embed_with_ollama(model: str, text: str) -> list[float]:

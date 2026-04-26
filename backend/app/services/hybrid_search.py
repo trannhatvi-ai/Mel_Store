@@ -86,6 +86,7 @@ def hybrid_search_policies(db: Session, query: str, limit: int | None = None) ->
             ROW_NUMBER() OVER (ORDER BY p.embedding <=> CAST(:q_embedding AS vector)) AS semantic_rank
           FROM store_policies p
           WHERE p.embedding IS NOT NULL
+            AND p.policy_type LIKE '%%_chunk'
           LIMIT :inner_limit
         ),
         keyword AS (
@@ -99,6 +100,7 @@ def hybrid_search_policies(db: Session, query: str, limit: int | None = None) ->
             ) AS keyword_rank
           FROM store_policies p
           WHERE p.search_vector @@ websearch_to_tsquery('simple', :query)
+            AND p.policy_type LIKE '%%_chunk'
           LIMIT :inner_limit
         ),
         fused AS (

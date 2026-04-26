@@ -1,7 +1,7 @@
 import uuid
 import hashlib
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -61,7 +61,12 @@ def update_ai_settings(db: Session, payload: AISettingsDTO) -> AISetting:
 
 
 def get_primary_policy(db: Session) -> StorePolicy | None:
-    return db.scalar(select(StorePolicy).order_by(StorePolicy.updated_at.desc()).limit(1))
+    return db.scalar(
+        select(StorePolicy)
+        .where(StorePolicy.policy_type == "studio")
+        .order_by(StorePolicy.updated_at.desc())
+        .limit(1)
+    )
 
 
 def upsert_primary_policy(db: Session, payload: PolicyUpdateDTO) -> StorePolicy:
@@ -69,49 +74,63 @@ def upsert_primary_policy(db: Session, payload: PolicyUpdateDTO) -> StorePolicy:
     
     setting = get_or_create_ai_settings(db)
     
-    # 1. Define headers to split on
-    headers_to_split_on = [
-        ("#", "Header 1"),
-        ("##", "Header 2"),
-        ("###", "Header 3"),
-        ("####", "Header 4"),
-    ]
+    # 1. Save/Update the MASTER record (Full text for display)
+    master_policy = db.scalar(
+        select(StorePolicy).where(
+            StorePolicy.policy_type == payload.policy_type,
+            StorePolicy.locale == payload.locale
+        ).limit(1)
+    )
     
-    # 2. Split the content
-    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-    md_header_splits = markdown_splitter.split_text(payload.content)
-    
-    # 3. Clear old policies of the same type/locale to avoid duplicates (Optional but recommended for RAG)
-    db.query(StorePolicy).filter(
-        StorePolicy.policy_type == payload.policy_type,
-        StorePolicy.locale == payload.locale
-    ).delete()
-    
-    last_policy = None
-    for split in md_header_splits:
-        # Prepend headers to content for better embedding context
-        header_context = " > ".join(v for k, v in split.metadata.items())
-        chunk_content = f"{header_context}\n\n{split.page_content}" if header_context else split.page_content
-        
-        policy = StorePolicy(
+    if not master_policy:
+        master_policy = StorePolicy(
             id=str(uuid.uuid4()),
             policy_type=payload.policy_type,
             locale=payload.locale,
             title=payload.title,
+            content=payload.content,
+        )
+        db.add(master_policy)
+    else:
+        master_policy.title = payload.title
+        master_policy.content = payload.content
+        master_policy.updated_at = func.now()
+
+    # 2. Handle CHUNKING for RAG
+    # Clear old chunks first
+    chunk_type = f"{payload.policy_type}_chunk"
+    db.query(StorePolicy).filter(StorePolicy.policy_type == chunk_type, StorePolicy.locale == payload.locale).delete()
+    
+    headers_to_split_on = [
+        ("#", "H1"),
+        ("##", "H2"),
+        ("###", "H3"),
+        ("####", "H4"),
+    ]
+    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    md_header_splits = markdown_splitter.split_text(payload.content)
+    
+    for split in md_header_splits:
+        header_context = " > ".join(v for k, v in split.metadata.items())
+        chunk_content = f"{header_context}\n\n{split.page_content}" if header_context else split.page_content
+        
+        chunk = StorePolicy(
+            id=str(uuid.uuid4()),
+            policy_type=chunk_type,
+            locale=payload.locale,
+            title=payload.title,
             content=chunk_content,
         )
-        policy.embedding = embed_query(
+        chunk.embedding = embed_query(
             chunk_content,
             provider=setting.embedding_provider,
             model=setting.embedding_model,
         )
-        db.add(policy)
-        last_policy = policy
+        db.add(chunk)
     
     db.commit()
-    if last_policy:
-        db.refresh(last_policy)
-    return last_policy or StorePolicy(content="")
+    db.refresh(master_policy)
+    return master_policy
 
 
 def get_all_products(db: Session) -> list[Product]:
