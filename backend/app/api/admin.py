@@ -36,7 +36,6 @@ from app.services.admin_service import (
     get_all_users,
     upsert_user,
     delete_user,
-    delete_order,
 )
 from app.services.model_catalog import get_model_catalog
 from app.services.chat_models import test_admin_configured_model
@@ -329,16 +328,6 @@ async def send_order_reminder(order_id: str, db: Session = Depends(get_db)):
     )
     await notify_human_support(message)
     return {"success": True}
-
-
-@router.delete("/orders/{order_id}")
-def remove_order(order_id: str, db: Session = Depends(get_db)):
-    success, reason = delete_order(db, order_id)
-    if success:
-        return {"success": True}
-    if reason == "not_found":
-        raise HTTPException(status_code=404, detail="Order not found")
-    raise HTTPException(status_code=409, detail=f"Failed to delete order: {reason}")
 
 
 @router.post("/login")

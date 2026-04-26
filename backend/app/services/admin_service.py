@@ -234,14 +234,3 @@ def delete_user(db: Session, user_id: str) -> tuple[bool, str]:
         db.rollback()
         return False, "in_use"
 
-def delete_order(db: Session, order_id: str) -> tuple[bool, str]:
-    order = db.get(Order, order_id)
-    if not order:
-        return False, "not_found"
-    try:
-        db.delete(order)
-        db.commit()
-        return True, "deleted"
-    except Exception as e:
-        db.rollback()
-        return False, str(e)

@@ -28,12 +28,15 @@ class OrderStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class RepairStatus(str, enum.Enum):
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    READY_FOR_PICKUP = "READY_FOR_PICKUP"
-    COMPLETED = "COMPLETED"
-    CANCELLED = "CANCELLED"
+class UserRole(str, enum.Enum):
+    GUEST = "GUEST"
+    STUDIO = "STUDIO"
+    ADMIN = "ADMIN"
+
+
+class UserPermission(str, enum.Enum):
+    VIEW = "VIEW"
+    EDIT = "EDIT"
 
 
 class User(Base):
@@ -51,32 +54,6 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     orders: Mapped[list["Order"]] = relationship(back_populates="user")
-
-
-class Repair(Base):
-    __tablename__ = "repairs"
-
-    id: Mapped[str] = mapped_column(String, primary_key=True)
-    customer_name: Mapped[str] = mapped_column(String, nullable=False)
-    device_name: Mapped[str] = mapped_column(String, nullable=False)
-    issue: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[RepairStatus] = mapped_column(
-        Enum(RepairStatus, name="repair_status"), default=RepairStatus.PENDING, nullable=False, index=True
-    )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    
-    notes: Mapped[list["RepairNote"]] = relationship(back_populates="repair", cascade="all, delete-orphan")
-
-
-class RepairNote(Base):
-    __tablename__ = "repair_notes"
-
-    id: Mapped[str] = mapped_column(String, primary_key=True)
-    repair_id: Mapped[str] = mapped_column(ForeignKey("repairs.id", ondelete="CASCADE"), index=True)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    repair: Mapped["Repair"] = relationship(back_populates="notes")
 
 
 class Product(Base):
@@ -195,12 +172,12 @@ class StudioProfile(Base):
     __tablename__ = "studio_profile"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
-    name: Mapped[str] = mapped_column(String, nullable=False, default="Htech Store")
-    address: Mapped[str] = mapped_column(String, nullable=False, default="123 Cách Mạng Tháng 8, Quận 3, TP.HCM")
-    email: Mapped[str] = mapped_column(String, nullable=False, default="contact@htechstore.vn")
-    bank_name: Mapped[str] = mapped_column(String, nullable=False, default="MB Bank")
-    bank_account: Mapped[str] = mapped_column(String, nullable=False, default="8888 9999 6666")
-    bank_beneficiary: Mapped[str] = mapped_column(String, nullable=False, default="HTECH STORE")
+    name: Mapped[str] = mapped_column(String, nullable=False, default="Feli Studio")
+    address: Mapped[str] = mapped_column(String, nullable=False, default="23 Đồng Khởi, District 1, Saigon")
+    email: Mapped[str] = mapped_column(String, nullable=False, default="hello@felistudio.vn")
+    bank_name: Mapped[str] = mapped_column(String, nullable=False, default="Vietcombank")
+    bank_account: Mapped[str] = mapped_column(String, nullable=False, default="0123 456 789")
+    bank_beneficiary: Mapped[str] = mapped_column(String, nullable=False, default="FELI STUDIO")
     facebook_link: Mapped[str | None] = mapped_column(String, nullable=True)
     instagram_link: Mapped[str | None] = mapped_column(String, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
