@@ -24,5 +24,5 @@ def build_system_prompt(locale: str | None = None) -> str:
         except Exception:
             base_prompt = BASE_SYSTEM_PROMPT
 
-    language_hint = "If the user asks in English, reply in English. If they ask in Vietnamese, reply in Vietnamese."
+    language_hint = ""
     return f"{base_prompt}\n\n{language_hint}".strip()
