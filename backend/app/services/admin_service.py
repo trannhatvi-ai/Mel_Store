@@ -65,31 +65,53 @@ def get_primary_policy(db: Session) -> StorePolicy | None:
 
 
 def upsert_primary_policy(db: Session, payload: PolicyUpdateDTO) -> StorePolicy:
+    from langchain_text_splitters import MarkdownHeaderTextSplitter
+    
     setting = get_or_create_ai_settings(db)
-    policy = get_primary_policy(db)
-    if not policy:
+    
+    # 1. Define headers to split on
+    headers_to_split_on = [
+        ("#", "Header 1"),
+        ("##", "Header 2"),
+        ("###", "Header 3"),
+        ("####", "Header 4"),
+    ]
+    
+    # 2. Split the content
+    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    md_header_splits = markdown_splitter.split_text(payload.content)
+    
+    # 3. Clear old policies of the same type/locale to avoid duplicates (Optional but recommended for RAG)
+    db.query(StorePolicy).filter(
+        StorePolicy.policy_type == payload.policy_type,
+        StorePolicy.locale == payload.locale
+    ).delete()
+    
+    last_policy = None
+    for split in md_header_splits:
+        # Prepend headers to content for better embedding context
+        header_context = " > ".join(v for k, v in split.metadata.items())
+        chunk_content = f"{header_context}\n\n{split.page_content}" if header_context else split.page_content
+        
         policy = StorePolicy(
             id=str(uuid.uuid4()),
             policy_type=payload.policy_type,
             locale=payload.locale,
             title=payload.title,
-            content=payload.content,
+            content=chunk_content,
+        )
+        policy.embedding = embed_query(
+            chunk_content,
+            provider=setting.embedding_provider,
+            model=setting.embedding_model,
         )
         db.add(policy)
-    else:
-        policy.policy_type = payload.policy_type
-        policy.locale = payload.locale
-        policy.title = payload.title
-        policy.content = payload.content
-
-    policy.embedding = embed_query(
-        payload.content,
-        provider=setting.embedding_provider,
-        model=setting.embedding_model,
-    )
+        last_policy = policy
+    
     db.commit()
-    db.refresh(policy)
-    return policy
+    if last_policy:
+        db.refresh(last_policy)
+    return last_policy or StorePolicy(content="")
 
 
 def get_all_products(db: Session) -> list[Product]:
