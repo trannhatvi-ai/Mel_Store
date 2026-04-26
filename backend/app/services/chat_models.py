@@ -28,7 +28,10 @@ async def _chat_with_ollama(model: str, system_prompt: str, prompt: str) -> str:
 async def _chat_with_openai(model: str, system_prompt: str, prompt: str) -> str:
     if not settings.openai_api_key:
         return "OPENAI_API_KEY is not configured."
-    llm = ChatOpenAI(model=model, api_key=settings.openai_api_key, temperature=0.2)
+    
+    base_url = "https://models.inference.ai.azure.com" if settings.openai_api_key.startswith("github_") else None
+    
+    llm = ChatOpenAI(model=model, api_key=settings.openai_api_key, base_url=base_url, temperature=0.2)
     res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
     return str(res.content).strip()
 
@@ -36,12 +39,12 @@ async def _chat_with_openai(model: str, system_prompt: str, prompt: str) -> str:
 async def _chat_with_phi4(model: str, system_prompt: str, prompt: str) -> str:
     if not settings.phi4_api_key:
         return "PHI4_API_KEY is not configured."
-    # Phi-4 via LangChain (assuming OpenAI-compatible endpoint or specialized provider)
-    # Using ChatOpenAI as a generic wrapper for Phi-4 if it's hosted on an OpenAI-compatible API
+    
+    # For GitHub Models, the model name is usually just "Phi-4" or "phi-4"
     llm = ChatOpenAI(
-        model=model, 
+        model="phi-4", 
         api_key=settings.phi4_api_key, 
-        # base_url="...", # Add base URL if needed
+        base_url="https://models.inference.ai.azure.com",
         temperature=0.2
     )
     res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
