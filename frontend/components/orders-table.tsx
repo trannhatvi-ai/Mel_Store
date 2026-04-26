@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronDown, Search, Eye, X, Phone, Mail } from "lucide-react"
+import { ChevronDown, Search, Eye, X, Phone, Mail, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { type Order, type OrderStatus, formatVND } from "@/lib/data"
 import { OrderStatusBadge } from "@/components/order-status-badge"
@@ -34,7 +34,7 @@ export function OrdersTable() {
   const [sortDesc, setSortDesc] = useState(true)
   const [active, setActive] = useState<any | null>(null)
   const [fetching, setFetching] = useState(true)
-  const [submittingAction, setSubmittingAction] = useState<"paid" | "reminder" | null>(null)
+  const [submittingAction, setSubmittingAction] = useState<"paid" | "reminder" | "delete" | "status" | null>(null)
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
 
@@ -94,6 +94,39 @@ export function OrdersTable() {
     } catch (err) {
       toast({
         title: "Không thể gửi nhắc nhở",
+        description: err instanceof Error ? err.message : "Vui lòng thử lại.",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmittingAction(null)
+    }
+  }
+
+  async function handleDeleteOrder() {
+    if (!active) return
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn hàng ${active.id}? Hành động này không thể hoàn tác.`)) {
+      return
+    }
+
+    setSubmittingAction("delete")
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/admin/orders/${active.id}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        throw new Error(payload?.detail || "Xóa đơn hàng thất bại")
+      }
+      
+      setOrders(prev => prev.filter(o => o.id !== active.id))
+      setActive(null)
+      toast({
+        title: "Đã xóa đơn hàng",
+        description: `Đơn hàng ${active.id} đã được xóa thành công.`,
+      })
+    } catch (err) {
+      toast({
+        title: "Không thể xóa đơn hàng",
         description: err instanceof Error ? err.message : "Vui lòng thử lại.",
         variant: "destructive",
       })
@@ -339,6 +372,21 @@ export function OrdersTable() {
                     className="rounded-full border border-border px-5 py-3 text-sm font-medium hover:bg-cream-deep disabled:opacity-50"
                   >
                     {submittingAction === "reminder" ? "Đang gửi..." : "Gửi nhắc nhở"}
+                  </button>
+
+                  <button
+                    onClick={() => void handleDeleteOrder()}
+                    disabled={submittingAction !== null}
+                    className="mt-2 rounded-full border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submittingAction === "delete" ? (
+                      "Đang xóa..."
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        Xóa đơn hàng
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
