@@ -4,15 +4,9 @@ import { useEffect, useState } from "react"
 import { Check, RotateCcw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
+import type { StudioProfile } from "@/lib/studio-profile"
 
-type Profile = {
-  name: string
-  address: string
-  email: string
-  bank_name: string
-  bank_account: string
-  bank_beneficiary: string
-}
+type Profile = StudioProfile
 
 type AISettings = {
   chat_provider: string

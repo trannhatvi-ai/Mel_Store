@@ -20,7 +20,7 @@ Create `backend/.env`:
 ```env
 DATABASE_URL=postgresql+psycopg://user:password@host:5432/dbname
 GEMINI_API_KEY=your_key
-CORS_ORIGINS=http://localhost:3000
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=

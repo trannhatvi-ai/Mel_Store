@@ -1,49 +1,50 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.models import Order
+from app.models.models import Category, Order, User
 from app.schemas.admin import (
     AISettingsDTO,
+    BulkDeleteRequestDTO,
+    CategoryDTO,
+    LoginRequestDTO,
     ModelCatalogResponse,
     ModelTestRequestDTO,
     ModelTestResponseDTO,
+    OrderDTO,
+    OrderItemDTO,
+    OrderStatusUpdateDTO,
     PolicyResponseDTO,
     PolicyUpdateDTO,
     ProductDTO,
     PromoUpdateDTO,
     StudioProfileDTO,
-    OrderDTO,
-    OrderItemDTO,
-    OrderStatusUpdateDTO,
     UserDTO,
-    LoginRequestDTO,
-    CategoryDTO,
-    BulkDeleteRequestDTO,
 )
 from app.services.admin_service import (
+    bulk_delete_orders,
+    delete_order,
     delete_product,
+    delete_user,
     get_all_orders,
     get_all_products,
+    get_all_users,
     get_or_create_ai_settings,
+    get_password_hash,
     get_primary_policy,
     get_studio_profile,
     update_ai_settings,
+    update_order_status,
     update_product_promo,
     update_studio_profile,
     upsert_primary_policy,
     upsert_product,
-    update_order_status,
-    get_all_users,
     upsert_user,
-    delete_user,
-    delete_order,
-    bulk_delete_orders,
 )
-from app.services.model_catalog import get_model_catalog
 from app.services.chat_models import test_admin_configured_model
+from app.services.model_catalog import get_model_catalog
 from app.services.telegram import notify_human_support
-from app.models.models import Category
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -143,6 +144,8 @@ def remove_product(product_id: str, db: Session = Depends(get_db)):
 @router.patch("/products/{product_id}/promo", response_model=ProductDTO)
 def update_promo(product_id: str, payload: PromoUpdateDTO, db: Session = Depends(get_db)) -> ProductDTO:
     p = update_product_promo(db, product_id, payload)
+    if not p:
+        raise HTTPException(status_code=404, detail="Product not found")
     return ProductDTO(
         id=p.id,
         slug=p.slug,
@@ -290,7 +293,9 @@ def list_orders(db: Session = Depends(get_db)) -> list[OrderDTO]:
 
 
 @router.patch("/orders/{order_id}/status", response_model=OrderDTO)
-def patch_order_status(order_id: str, payload: OrderStatusUpdateDTO, db: Session = Depends(get_db)) -> OrderDTO:
+def patch_order_status(
+    order_id: str, payload: OrderStatusUpdateDTO, db: Session = Depends(get_db)
+) -> OrderDTO:
     try:
         o = update_order_status(db, order_id, payload.status)
     except ValueError:
@@ -349,10 +354,9 @@ def remove_orders_bulk(payload: BulkDeleteRequestDTO, db: Session = Depends(get_
 
 @router.post("/login")
 def login(payload: LoginRequestDTO, db: Session = Depends(get_db)):
-    from sqlalchemy import or_, select
-    from app.models.models import User
-    from app.services.admin_service import get_password_hash
-    user = db.scalar(select(User).where(or_(User.email == payload.identifier, User.username == payload.identifier)))
+    user = db.scalar(
+        select(User).where(or_(User.email == payload.identifier, User.username == payload.identifier))
+    )
     if not user:
         raise HTTPException(status_code=401, detail="Tài khoản không tồn tại.")
     if user.hashed_password:
@@ -389,7 +393,12 @@ def list_users(db: Session = Depends(get_db)):
 def create_user(payload: UserDTO, db: Session = Depends(get_db)):
     u = upsert_user(db, payload)
     return UserDTO(
-        id=u.id, email=u.email, username=u.username, full_name=u.full_name, role=u.role.value, permission=u.permission.value
+        id=u.id,
+        email=u.email,
+        username=u.username,
+        full_name=u.full_name,
+        role=u.role.value,
+        permission=u.permission.value,
     )
 
 
