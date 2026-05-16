@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Mel_Store** (2048 symbols, 4149 relationships, 136 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Melstore** (947 symbols, 1766 relationships, 31 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -24,10 +24,10 @@ This project is indexed by GitNexus as **Mel_Store** (2048 symbols, 4149 relatio
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/Mel_Store/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/Mel_Store/clusters` | All functional areas |
-| `gitnexus://repo/Mel_Store/processes` | All execution flows |
-| `gitnexus://repo/Mel_Store/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/Melstore/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/Melstore/clusters` | All functional areas |
+| `gitnexus://repo/Melstore/processes` | All execution flows |
+| `gitnexus://repo/Melstore/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 

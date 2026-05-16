@@ -1,5 +1,6 @@
 .env
 .env.*
+!.env.example
 .python-version
 .venv/
 __pycache__/
