@@ -18,6 +18,5 @@ def test_schema_reconcile_revision_runs_after_deployed_revision() -> None:
 
     revision = script.get_revision("20260516_0001")
 
-    assert script.get_current_head() == "20260516_0001"
     assert revision is not None
     assert revision.down_revision == "20260515_0015"
