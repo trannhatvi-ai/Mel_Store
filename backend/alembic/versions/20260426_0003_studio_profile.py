@@ -25,7 +25,7 @@ def upgrade() -> None:
             sa.Column("id", sa.Integer(), nullable=False),
             sa.Column("name", sa.String(), nullable=False, server_default="Feli Studio"),
             sa.Column("address", sa.String(), nullable=False, server_default="23 Dong Khoi, District 1, Saigon"),
-            sa.Column("email", sa.String(), nullable=False, server_default="hello@maisonlumiere.vn"),
+            sa.Column("email", sa.String(), nullable=False, server_default="hello@felistudio.vn"),
             sa.Column("bank_name", sa.String(), nullable=False, server_default="Vietcombank"),
             sa.Column("bank_account", sa.String(), nullable=False, server_default="0123 456 789"),
             sa.Column("bank_beneficiary", sa.String(), nullable=False, server_default="FELI STUDIO"),
@@ -36,7 +36,7 @@ def upgrade() -> None:
     op.execute(
         """
         INSERT INTO studio_profile (id, name, address, email, bank_name, bank_account, bank_beneficiary)
-        VALUES (1, 'Feli Studio', '23 Dong Khoi, District 1, Saigon', 'hello@maisonlumiere.vn', 'Vietcombank', '0123 456 789', 'FELI STUDIO')
+        VALUES (1, 'Feli Studio', '23 Dong Khoi, District 1, Saigon', 'hello@felistudio.vn', 'Vietcombank', '0123 456 789', 'FELI STUDIO')
         ON CONFLICT (id) DO NOTHING
         """
     )

@@ -26,7 +26,7 @@ const en = {
   "footer.address1": "23 Đồng Khởi, District 1",
   "footer.address2": "Saigon, Vietnam",
   "footer.hours": "Tue – Sun · 10:00 – 19:00",
-  "footer.copyright": "© {year} Maison Lumière. All rights reserved.",
+  "footer.copyright": "© {year} Feli Studio. All rights reserved.",
   "footer.designed": "Designed with care in Saigon.",
 
   // Hero
@@ -275,7 +275,7 @@ const en = {
   "inventory.modal.eyebrow": "New piece",
   "inventory.modal.title": "Add to inventory",
   "inventory.modal.pieceName": "Piece name",
-  "inventory.modal.pieceNamePlaceholder": "e.g. Lumière Lace Gown",
+  "inventory.modal.pieceNamePlaceholder": "e.g. Feli Lace Gown",
   "inventory.modal.category": "Category",
   "inventory.modal.priceVnd": "Price (VND)",
   "inventory.modal.pricePlaceholder": "1,200,000",
@@ -406,7 +406,7 @@ const vi: Record<keyof typeof en, string> = {
   "footer.address1": "23 Đồng Khởi, Quận 1",
   "footer.address2": "Sài Gòn, Việt Nam",
   "footer.hours": "Thứ 3 – Chủ Nhật · 10:00 – 19:00",
-  "footer.copyright": "© {year} Maison Lumière. Đã đăng ký bản quyền.",
+  "footer.copyright": "© {year} Feli Studio. Đã đăng ký bản quyền.",
   "footer.designed": "Được thiết kế tỉ mỉ tại Sài Gòn.",
 
   // Hero
@@ -656,7 +656,7 @@ const vi: Record<keyof typeof en, string> = {
   "inventory.modal.eyebrow": "Thiết kế mới",
   "inventory.modal.title": "Thêm vào kho",
   "inventory.modal.pieceName": "Tên thiết kế",
-  "inventory.modal.pieceNamePlaceholder": "VD: Đầm Cưới Ren Lumière",
+  "inventory.modal.pieceNamePlaceholder": "VD: Đầm Cưới Ren Feli",
   "inventory.modal.category": "Danh mục",
   "inventory.modal.priceVnd": "Giá (VND)",
   "inventory.modal.pricePlaceholder": "1.200.000",

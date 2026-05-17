@@ -1,12 +1,19 @@
-import uuid
 import hashlib
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.models import AISetting, Category, Order, OrderStatus, Product, StorePolicy, StudioProfile, User, UserRole, UserPermission
-from app.schemas.admin import AISettingsDTO, OrderDTO, OrderItemDTO, PolicyUpdateDTO, ProductDTO, PromoUpdateDTO, StudioProfileDTO, UserDTO
+from app.models.models import AISetting, Order, OrderStatus, Product, StorePolicy, StudioProfile, User
+from app.schemas.admin import (
+    AISettingsDTO,
+    PolicyUpdateDTO,
+    ProductDTO,
+    PromoUpdateDTO,
+    StudioProfileDTO,
+    UserDTO,
+)
 from app.services.embeddings import embed_query
 
 
@@ -27,6 +34,16 @@ def get_or_create_ai_settings(db: Session) -> AISetting:
     if setting.database_url is None and os.getenv("DATABASE_URL"):
         setting.database_url = os.getenv("DATABASE_URL")
         dirty = True
+    try:
+        from app.services.system_prompt import sanitize_system_prompt_for_storage
+
+        sanitized_prompt = sanitize_system_prompt_for_storage(setting.system_prompt)
+        if setting.system_prompt != sanitized_prompt:
+            setting.system_prompt = sanitized_prompt
+            dirty = True
+    except ImportError:
+        pass
+
     if setting.system_prompt is None:
         try:
             from app.services.system_prompt import BASE_SYSTEM_PROMPT
@@ -54,7 +71,9 @@ def update_ai_settings(db: Session, payload: AISettingsDTO) -> AISetting:
     setting.google_client_id = payload.google_client_id
     setting.google_client_secret = payload.google_client_secret
     setting.database_url = payload.database_url
-    setting.system_prompt = payload.system_prompt
+    from app.services.system_prompt import sanitize_system_prompt_for_storage
+
+    setting.system_prompt = sanitize_system_prompt_for_storage(payload.system_prompt)
     db.commit()
     db.refresh(setting)
     return setting
@@ -99,7 +118,10 @@ def upsert_primary_policy(db: Session, payload: PolicyUpdateDTO) -> StorePolicy:
     # 2. Handle CHUNKING for RAG
     # Clear old chunks first
     chunk_type = f"{payload.policy_type}_chunk"
-    db.query(StorePolicy).filter(StorePolicy.policy_type == chunk_type, StorePolicy.locale == payload.locale).delete()
+    db.query(StorePolicy).filter(
+        StorePolicy.policy_type == chunk_type,
+        StorePolicy.locale == payload.locale,
+    ).delete()
     
     headers_to_split_on = [
         ("#", "H1"),

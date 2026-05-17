@@ -16,7 +16,7 @@ export type StudioProfile = {
 const defaultProfile: StudioProfile = {
   name: "Feli Studio",
   address: "23 Dong Khoi, District 1, Saigon",
-  email: "hello@maisonlumiere.vn",
+  email: "hello@felistudio.vn",
   bank_name: "Vietcombank",
   bank_account: "0123 456 789",
   bank_beneficiary: "FELI STUDIO",

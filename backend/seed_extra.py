@@ -17,12 +17,12 @@ def seed():
         if not db.get(StudioProfile, 1):
             profile = StudioProfile(
                 id=1,
-                name="Maison Lumière",
+                name="Feli Studio",
                 address="23 Đồng Khởi, District 1, Saigon",
-                email="hello@maisonlumiere.vn",
+                email="hello@felistudio.vn",
                 bank_name="Vietcombank",
                 bank_account="0123 456 789",
-                bank_beneficiary="MAISON LUMIERE"
+                bank_beneficiary="FELI STUDIO"
             )
             db.add(profile)
             print("Seeded Studio Profile.")

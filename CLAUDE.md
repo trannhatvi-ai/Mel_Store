@@ -1,7 +1,9 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Mel_Store** (2145 symbols, 4268 relationships, 137 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Mel_Store** (2161 symbols, 4288 relationships, 137 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+
+Project identity: this workspace is for **Feli Studio** (dress rental and photography). Do not introduce or reuse any technology-retail project identity in code, docs, prompts, or instructions.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

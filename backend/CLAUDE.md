@@ -3,6 +3,8 @@
 
 This project is indexed by GitNexus as **Melstore** (1022 symbols, 1854 relationships, 32 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
+Project identity: this workspace is for **Feli Studio** (dress rental and photography). Do not introduce or reuse any technology-retail project identity in code, docs, prompts, or instructions.
+
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
 ## Always Do
