@@ -7,41 +7,11 @@ type ApiProduct = Product & {
   price_per_day?: boolean
 }
 
-const FALLBACK_PRODUCT_IMAGE = "/placeholder.jpg"
-
-const LOCAL_PRODUCT_IMAGES = new Set([
-  "/placeholder.jpg",
-  "/placeholder.svg",
-  "/images/dress-1.jpg",
-  "/images/dress-2.jpg",
-  "/images/dress-3.jpg",
-  "/images/dress-4.jpg",
-  "/images/hero-bride.jpg",
-  "/images/hero-couple.jpg",
-  "/images/hero-dress.jpg",
-  "/images/package-1.jpg",
-  "/images/package-2.jpg",
-  "/images/package-3.jpg",
-])
-
-function normalizeProductImage(src?: string | null): string {
-  const value = src?.trim()
-  if (!value) return FALLBACK_PRODUCT_IMAGE
-  if (value.startsWith("data:image/")) return value
-  if (/^https?:\/\//i.test(value)) return value
-  if (LOCAL_PRODUCT_IMAGES.has(value)) return value
-  return FALLBACK_PRODUCT_IMAGE
-}
-
 function normalizeProduct(p: ApiProduct): Product {
-  const image = normalizeProductImage(p.image)
-  const gallery = (p.gallery ?? []).map(normalizeProductImage)
-
   return {
     ...p,
-    image,
     pricePerDay: Boolean(p.pricePerDay ?? p.price_per_day),
-    gallery: gallery.length ? gallery : [image],
+    gallery: p.gallery?.length ? p.gallery : [p.image || "/placeholder.svg"],
   }
 }
 

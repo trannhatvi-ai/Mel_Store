@@ -36,7 +36,6 @@ def test_supabase_keepalive_runs_database_ping(monkeypatch) -> None:
     calls: list[str] = []
 
     monkeypatch.setenv("KEEPALIVE_TOKEN", "secret-token")
-    monkeypatch.setattr("app.main.settings.keepalive_token", None, raising=False)
     monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
 
     client = TestClient(app)
@@ -47,26 +46,10 @@ def test_supabase_keepalive_runs_database_ping(monkeypatch) -> None:
     assert calls == ["SELECT 1"]
 
 
-def test_supabase_keepalive_uses_settings_token(monkeypatch) -> None:
-    calls: list[str] = []
-
-    monkeypatch.delenv("KEEPALIVE_TOKEN", raising=False)
-    monkeypatch.setattr("app.main.settings.keepalive_token", "settings-token", raising=False)
-    monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
-
-    client = TestClient(app)
-    res = client.get("/health/supabase?token=settings-token")
-
-    assert res.status_code == 200
-    assert res.json() == {"status": "ok", "database": "reachable"}
-    assert calls == ["SELECT 1"]
-
-
 def test_supabase_keepalive_rejects_invalid_token(monkeypatch) -> None:
     calls: list[str] = []
 
     monkeypatch.setenv("KEEPALIVE_TOKEN", "secret-token")
-    monkeypatch.setattr("app.main.settings.keepalive_token", None, raising=False)
     monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
 
     client = TestClient(app)
@@ -80,7 +63,6 @@ def test_supabase_keepalive_requires_token_configuration(monkeypatch) -> None:
     calls: list[str] = []
 
     monkeypatch.delenv("KEEPALIVE_TOKEN", raising=False)
-    monkeypatch.setattr("app.main.settings.keepalive_token", None, raising=False)
     monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
 
     client = TestClient(app)
@@ -94,7 +76,6 @@ def test_supabase_keepalive_reports_database_failure(monkeypatch) -> None:
     calls: list[str] = []
 
     monkeypatch.setenv("KEEPALIVE_TOKEN", "secret-token")
-    monkeypatch.setattr("app.main.settings.keepalive_token", None, raising=False)
     monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls, should_fail=True), raising=False)
 
     client = TestClient(app, raise_server_exceptions=False)

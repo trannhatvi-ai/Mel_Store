@@ -34,7 +34,7 @@ async def health() -> dict[str, str]:
 
 @app.get("/health/supabase")
 def supabase_keepalive(token: str) -> dict[str, str]:
-    expected_token = settings.keepalive_token or os.getenv("KEEPALIVE_TOKEN")
+    expected_token = os.getenv("KEEPALIVE_TOKEN")
     if not expected_token:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

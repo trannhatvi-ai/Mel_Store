@@ -19,7 +19,6 @@ class Settings(BaseSettings):
 
     telegram_bot_token: str | None = Field(default=None, alias="TELEGRAM_BOT_TOKEN")
     telegram_chat_id: str | None = Field(default=None, alias="TELEGRAM_CHAT_ID")
-    keepalive_token: str | None = Field(default=None, alias="KEEPALIVE_TOKEN")
 
     cors_origins: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
     embedding_dimension: int = Field(default=768, alias="EMBEDDING_DIMENSION")
@@ -28,11 +27,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        origins = [origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()]
-        if self.app_env.lower() == "development":
-            origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
-
-        return list(dict.fromkeys(origins))
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 settings = Settings()
