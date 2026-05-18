@@ -12,6 +12,8 @@ type Profile = {
   bank_name: string
   bank_account: string
   bank_beneficiary: string
+  facebook_link?: string | null
+  instagram_link?: string | null
 }
 
 type AISettings = {
@@ -23,6 +25,9 @@ type AISettings = {
   google_client_secret: string | null
   database_url: string | null
   system_prompt: string | null
+  telegram_bot_token: string | null
+  telegram_chat_id: string | null
+  telegram_enabled: boolean
 }
 
 export default function SettingsPage() {
@@ -33,15 +38,13 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
-
   const loadProfile = async () => {
     setLoading(true)
     setError(null)
     try {
       const [resProfile, resAi] = await Promise.all([
-        fetch(`${apiBaseUrl}/api/admin/studio-profile`),
-        fetch(`${apiBaseUrl}/api/admin/settings`)
+        fetch("/api/admin/studio-profile"),
+        fetch("/api/admin/settings")
       ])
       if (!resProfile.ok || !resAi.ok) {
         throw new Error("Failed to load settings")
@@ -50,7 +53,7 @@ export default function SettingsPage() {
       setAiSettings(await resAi.json())
     } catch (err) {
       console.error(err)
-      setError("Không thể tải cài đặt. Vui lòng kiểm tra backend và thử lại.")
+      setError("Không thể tải cài đặt. Vui lòng kiểm tra server và thử lại.")
       setProfile(null)
     } finally {
       setLoading(false)
@@ -68,12 +71,12 @@ export default function SettingsPage() {
     setSaving(true)
     try {
       const [resProfile, resAi] = await Promise.all([
-        fetch(`${apiBaseUrl}/api/admin/studio-profile`, {
+        fetch("/api/admin/studio-profile", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(profile),
         }),
-        fetch(`${apiBaseUrl}/api/admin/settings`, {
+        fetch("/api/admin/settings", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(aiSettings),
@@ -265,6 +268,59 @@ export default function SettingsPage() {
           <section className="rounded-lg border border-border bg-card p-6 shadow-sm lg:col-span-2">
             <h2 className="font-serif text-xl text-primary">Cấu hình hệ thống (System & AI)</h2>
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="text-charcoal-soft font-medium">Google OAuth Client ID</span>
+                <input
+                  className="rounded-lg border border-border bg-cream-deep/20 px-4 py-2.5 focus:border-primary focus:outline-none transition-colors"
+                  value={aiSettings?.google_client_id ?? ""}
+                  onChange={(e) =>
+                    setAiSettings((prev) => (prev ? { ...prev, google_client_id: e.target.value || null } : prev))
+                  }
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="text-charcoal-soft font-medium">Google OAuth Client Secret</span>
+                <input
+                  type="password"
+                  className="rounded-lg border border-border bg-cream-deep/20 px-4 py-2.5 focus:border-primary focus:outline-none transition-colors"
+                  value={aiSettings?.google_client_secret ?? ""}
+                  onChange={(e) =>
+                    setAiSettings((prev) => (prev ? { ...prev, google_client_secret: e.target.value || null } : prev))
+                  }
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="text-charcoal-soft font-medium">Telegram Bot Token</span>
+                <input
+                  type="password"
+                  className="rounded-lg border border-border bg-cream-deep/20 px-4 py-2.5 focus:border-primary focus:outline-none transition-colors"
+                  value={aiSettings?.telegram_bot_token ?? ""}
+                  onChange={(e) =>
+                    setAiSettings((prev) => (prev ? { ...prev, telegram_bot_token: e.target.value || null } : prev))
+                  }
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="text-charcoal-soft font-medium">Telegram Chat ID</span>
+                <input
+                  className="rounded-lg border border-border bg-cream-deep/20 px-4 py-2.5 focus:border-primary focus:outline-none transition-colors"
+                  value={aiSettings?.telegram_chat_id ?? ""}
+                  onChange={(e) =>
+                    setAiSettings((prev) => (prev ? { ...prev, telegram_chat_id: e.target.value || null } : prev))
+                  }
+                />
+              </label>
+              <label className="flex items-center justify-between gap-4 rounded-lg border border-border bg-cream-deep/20 px-4 py-3 text-sm lg:col-span-2">
+                <span className="text-charcoal-soft font-medium">Enable Telegram bot</span>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={Boolean(aiSettings?.telegram_enabled)}
+                  onChange={(e) =>
+                    setAiSettings((prev) => (prev ? { ...prev, telegram_enabled: e.target.checked } : prev))
+                  }
+                />
+              </label>
               <label className="flex flex-col gap-1.5 text-sm lg:col-span-2">
                 <span className="text-charcoal-soft font-medium">System Prompt (AI Chatbot)</span>
                 <textarea 

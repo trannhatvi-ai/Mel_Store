@@ -13,7 +13,7 @@ export default function AdminOverview() {
   const [fetching, setFetching] = useState(true)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"}/api/admin/orders`)
+    fetch("/api/admin/orders")
       .then(res => res.json())
       .then(setOrders)
       .catch(console.error)
@@ -132,4 +132,3 @@ function StatCard({ icon: Icon, label, value, loading }: { icon: any, label: str
     </div>
   )
 }
-

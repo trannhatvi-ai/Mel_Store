@@ -1,13 +1,16 @@
+from typing import Mapping, Any
+
 import httpx
-from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage, SystemMessage
-from sqlalchemy.orm import Session
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.core.config import settings
-from app.services.admin_service import get_or_create_ai_settings
 from app.services.system_prompt import build_system_prompt
+
+
+def _setting(ai_settings: Mapping[str, Any], key: str, default: str = "") -> str:
+    value = ai_settings.get(key, default)
+    return str(value or default)
 
 
 async def _chat_with_ollama(model: str, system_prompt: str, prompt: str) -> str:
@@ -29,9 +32,10 @@ async def _chat_with_ollama(model: str, system_prompt: str, prompt: str) -> str:
 async def _chat_with_openai(model: str, system_prompt: str, prompt: str) -> str:
     if not settings.openai_api_key:
         return "OPENAI_API_KEY is not configured."
-    
+
     base_url = "https://models.inference.ai.azure.com" if settings.openai_api_key.startswith("github_") else None
-    
+    from langchain_openai import ChatOpenAI
+
     llm = ChatOpenAI(model=model, api_key=settings.openai_api_key, base_url=base_url, temperature=0.2)
     res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
     return str(res.content).strip()
@@ -40,13 +44,14 @@ async def _chat_with_openai(model: str, system_prompt: str, prompt: str) -> str:
 async def _chat_with_phi4(model: str, system_prompt: str, prompt: str) -> str:
     if not settings.phi4_api_key:
         return "PHI4_API_KEY is not configured."
-    
-    # For GitHub Models, the model name is usually just "Phi-4" or "phi-4"
+
+    from langchain_openai import ChatOpenAI
+
     llm = ChatOpenAI(
-        model="phi-4", 
-        api_key=settings.phi4_api_key, 
+        model="phi-4",
+        api_key=settings.phi4_api_key,
         base_url="https://models.inference.ai.azure.com",
-        temperature=0.2
+        temperature=0.2,
     )
     res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
     return str(res.content).strip()
@@ -55,28 +60,33 @@ async def _chat_with_phi4(model: str, system_prompt: str, prompt: str) -> str:
 async def _chat_with_phi4_reasoning(model: str, system_prompt: str, prompt: str) -> str:
     if not settings.phi4_reasoning_api_key:
         return "PHI4_RESONING_API_KEY is not configured."
-    
+
+    from langchain_openai import ChatOpenAI
+
     llm = ChatOpenAI(
-        model=model, 
-        api_key=settings.phi4_reasoning_api_key, 
+        model=model,
+        api_key=settings.phi4_reasoning_api_key,
         base_url="https://models.inference.ai.azure.com",
-        temperature=0.2
+        temperature=0.2,
     )
     res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
     return str(res.content).strip()
 
 
 async def _chat_with_gemini(model: str, system_prompt: str, prompt: str) -> str:
+    if not settings.gemini_api_key:
+        return "GEMINI_API_KEY is not configured."
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     llm = ChatGoogleGenerativeAI(model=model, google_api_key=settings.gemini_api_key, temperature=0.2)
     res = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
     return str(res.content).strip()
 
 
-async def generate_admin_configured_answer(db: Session, prompt: str, locale: str = "vi") -> str:
-    cfg = get_or_create_ai_settings(db)
-    provider = cfg.chat_provider
-    model = cfg.chat_model
-    system_prompt = build_system_prompt(locale)
+async def generate_admin_configured_answer(ai_settings: Mapping[str, Any], prompt: str, locale: str = "vi") -> str:
+    provider = _setting(ai_settings, "chat_provider", "gemini")
+    model = _setting(ai_settings, "chat_model", "gemini-2.0-flash")
+    system_prompt = build_system_prompt(locale, ai_settings.get("system_prompt"))
     try:
         if provider == "ollama":
             return await _chat_with_ollama(model, system_prompt, prompt)
@@ -91,41 +101,46 @@ async def generate_admin_configured_answer(db: Session, prompt: str, locale: str
         return "I couldn't generate a response from the configured model."
 
 
-def get_chat_model(db: Session) -> BaseChatModel:
-    cfg = get_or_create_ai_settings(db)
-    provider = cfg.chat_provider
-    model = cfg.chat_model
+def get_chat_model(ai_settings: Mapping[str, Any]) -> BaseChatModel:
+    provider = _setting(ai_settings, "chat_provider", "gemini")
+    model = _setting(ai_settings, "chat_model", "gemini-2.0-flash")
 
     if provider == "openai":
         base_url = "https://models.inference.ai.azure.com" if settings.openai_api_key.startswith("github_") else None
+        from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(model=model, api_key=settings.openai_api_key, base_url=base_url, temperature=0.2)
-    
+
     if provider == "phi4":
+        from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
-            model="phi-4", 
-            api_key=settings.phi4_api_key, 
+            model="phi-4",
+            api_key=settings.phi4_api_key,
             base_url="https://models.inference.ai.azure.com",
-            temperature=0.2
-        )
-    
-    if provider == "phi4_reasoning":
-        return ChatOpenAI(
-            model=model, 
-            api_key=settings.phi4_reasoning_api_key, 
-            base_url="https://models.inference.ai.azure.com",
-            temperature=0.2
+            temperature=0.2,
         )
 
-    # Default to Gemini
+    if provider == "phi4_reasoning":
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            model=model,
+            api_key=settings.phi4_reasoning_api_key,
+            base_url="https://models.inference.ai.azure.com",
+            temperature=0.2,
+        )
+
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     return ChatGoogleGenerativeAI(model=model, google_api_key=settings.gemini_api_key, temperature=0.2)
 
 
-async def test_admin_configured_model(db: Session, prompt: str) -> dict[str, str]:
-    cfg = get_or_create_ai_settings(db)
-    answer = await generate_admin_configured_answer(db, prompt)
+async def test_admin_configured_model(ai_settings: Mapping[str, Any], prompt: str) -> dict[str, str]:
+    answer = await generate_admin_configured_answer(ai_settings, prompt)
     return {
-        "provider": cfg.chat_provider,
-        "model": cfg.chat_model,
+        "provider": _setting(ai_settings, "chat_provider", "gemini"),
+        "model": _setting(ai_settings, "chat_model", "gemini-2.0-flash"),
         "prompt": prompt,
         "answer": answer,
     }

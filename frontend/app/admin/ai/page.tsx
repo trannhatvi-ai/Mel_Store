@@ -17,8 +17,6 @@ type SettingsResponse = {
 type PolicyResponse = { id: string; title: string | null; content: string; locale: string; policy_type: string } | null
 type ModelTestResponse = { provider: string; model: string; prompt: string; answer: string }
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
-
 export default function AIPage() {
   const [catalog, setCatalog] = useState<CatalogResponse | null>(null)
   const [settings, setSettings] = useState<SettingsResponse>({
@@ -38,9 +36,9 @@ export default function AIPage() {
     void (async () => {
       try {
         const [catRes, setRes, polRes] = await Promise.all([
-          fetch(`${apiBaseUrl}/api/admin/model-catalog`),
-          fetch(`${apiBaseUrl}/api/admin/settings`),
-          fetch(`${apiBaseUrl}/api/admin/policy`),
+          fetch("/api/admin/model-catalog"),
+          fetch("/api/admin/settings"),
+          fetch("/api/admin/policy"),
         ])
         if (catRes.ok) setCatalog((await catRes.json()) as CatalogResponse)
         if (setRes.ok) setSettings((await setRes.json()) as SettingsResponse)
@@ -66,7 +64,7 @@ export default function AIPage() {
     e.preventDefault()
     setSaving(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/settings`, {
+      const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
@@ -83,7 +81,7 @@ export default function AIPage() {
     e.preventDefault()
     setSaving(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/policy`, {
+      const res = await fetch("/api/admin/policy", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: policy }),
@@ -100,7 +98,7 @@ export default function AIPage() {
     setTestingModel(true)
     setTestResult(null)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/test-model`, {
+      const res = await fetch("/api/admin/test-model", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: testPrompt }),

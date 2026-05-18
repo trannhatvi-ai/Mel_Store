@@ -24,26 +24,25 @@ const defaultProfile: StudioProfile = {
 
 export function useStudioProfile() {
   const [profile, setProfile] = useState<StudioProfile>(defaultProfile)
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
 
   useEffect(() => {
     let active = true
 
     void (async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/api/admin/studio-profile`)
+        const res = await fetch("/api/admin/studio-profile")
         if (!res.ok) return
         const data = await res.json()
         if (active) setProfile(data)
       } catch {
-        // Keep fallback profile when backend is unavailable.
+        // Keep fallback profile when the API is unavailable.
       }
     })()
 
     return () => {
       active = false
     }
-  }, [apiBaseUrl])
+  }, [])
 
   return profile
 }

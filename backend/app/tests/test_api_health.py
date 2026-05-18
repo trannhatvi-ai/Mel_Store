@@ -1,85 +1,54 @@
-import os
-
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/mel_store")
-os.environ.setdefault("GEMINI_API_KEY", "test-key")
-
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 
-def test_health_endpoint() -> None:
+def test_health_endpoint_does_not_require_database_configuration(monkeypatch) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
     client = TestClient(app)
     res = client.get("/health")
-    assert res.status_code == 200
-    assert res.json() == {"status": "ok"}
-
-
-class FakeSession:
-    def __init__(self, calls: list[str], should_fail: bool = False) -> None:
-        self.calls = calls
-        self.should_fail = should_fail
-
-    def __enter__(self) -> "FakeSession":
-        return self
-
-    def __exit__(self, exc_type, exc, traceback) -> None:
-        return None
-
-    def execute(self, statement) -> None:
-        self.calls.append(str(statement))
-        if self.should_fail:
-            raise RuntimeError("database unavailable")
-
-
-def test_supabase_keepalive_runs_database_ping(monkeypatch) -> None:
-    calls: list[str] = []
-
-    monkeypatch.setenv("KEEPALIVE_TOKEN", "secret-token")
-    monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
-
-    client = TestClient(app)
-    res = client.get("/health/supabase?token=secret-token")
 
     assert res.status_code == 200
-    assert res.json() == {"status": "ok", "database": "reachable"}
-    assert calls == ["SELECT 1"]
+    assert res.json() == {"status": "ok", "service": "ai"}
 
 
-def test_supabase_keepalive_rejects_invalid_token(monkeypatch) -> None:
-    calls: list[str] = []
+def test_model_catalog_endpoint_returns_ai_options() -> None:
+    client = TestClient(app)
+    res = client.get("/api/model-catalog")
 
-    monkeypatch.setenv("KEEPALIVE_TOKEN", "secret-token")
-    monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
+    assert res.status_code == 200
+    body = res.json()
+    assert "chat_providers" in body
+    assert "embedding_providers" in body
+
+
+def test_chat_endpoint_uses_frontend_supplied_context(monkeypatch) -> None:
+    async def fake_invoke_agent(**kwargs):
+        assert kwargs["settings"]["chat_provider"] == "gemini"
+        assert kwargs["context"]["products"][0]["name"]["vi"] == "Vay cuoi"
+        return {"answer": "Xin chao", "tool": None, "payload": None, "debug": None}
+
+    monkeypatch.setattr("app.api.chat.invoke_agent", fake_invoke_agent)
 
     client = TestClient(app)
-    res = client.get("/health/supabase?token=wrong-token")
+    res = client.post(
+        "/api/chat",
+        json={
+            "session_id": "test-session",
+            "message": "Tu van vay cuoi",
+            "locale": "vi",
+            "settings": {
+                "chat_provider": "gemini",
+                "chat_model": "gemini-2.0-flash",
+            },
+            "context": {
+                "products": [{"id": "p1", "name": {"vi": "Vay cuoi"}, "price": 1200000}],
+                "policies": [],
+                "vouchers": [],
+            },
+        },
+    )
 
-    assert res.status_code == 401
-    assert calls == []
-
-
-def test_supabase_keepalive_requires_token_configuration(monkeypatch) -> None:
-    calls: list[str] = []
-
-    monkeypatch.delenv("KEEPALIVE_TOKEN", raising=False)
-    monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls), raising=False)
-
-    client = TestClient(app)
-    res = client.get("/health/supabase?token=secret-token")
-
-    assert res.status_code == 503
-    assert calls == []
-
-
-def test_supabase_keepalive_reports_database_failure(monkeypatch) -> None:
-    calls: list[str] = []
-
-    monkeypatch.setenv("KEEPALIVE_TOKEN", "secret-token")
-    monkeypatch.setattr("app.main.SessionLocal", lambda: FakeSession(calls, should_fail=True), raising=False)
-
-    client = TestClient(app, raise_server_exceptions=False)
-    res = client.get("/health/supabase?token=secret-token")
-
-    assert res.status_code == 503
-    assert calls == ["SELECT 1"]
+    assert res.status_code == 200
+    assert res.json()["answer"] == "Xin chao"

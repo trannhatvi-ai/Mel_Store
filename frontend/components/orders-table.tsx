@@ -37,11 +37,9 @@ export function OrdersTable() {
   const [submittingAction, setSubmittingAction] = useState<"paid" | "reminder" | "delete" | "status" | "bulk-delete" | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
-
   useEffect(() => {
     setFetching(true)
-    fetch(`${apiBaseUrl}/api/admin/orders`)
+    fetch("/api/admin/orders")
       .then(res => res.json())
       .then(setOrders)
       .catch(console.error)
@@ -53,7 +51,7 @@ export function OrdersTable() {
     setSubmittingAction("status")
     
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/orders/${active.id}/status`, {
+      const res = await fetch(`/api/admin/orders/${active.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -81,7 +79,7 @@ export function OrdersTable() {
     if (!active) return
     setSubmittingAction("reminder")
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/orders/${active.id}/send-reminder`, {
+      const res = await fetch(`/api/admin/orders/${active.id}/send-reminder`, {
         method: "POST",
       })
       if (!res.ok) {
@@ -109,7 +107,7 @@ export function OrdersTable() {
 
     setSubmittingAction("delete")
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/orders/${active.id}`, {
+      const res = await fetch(`/api/admin/orders/${active.id}`, {
         method: "DELETE",
       })
       if (!res.ok) {
@@ -141,7 +139,7 @@ export function OrdersTable() {
 
     setSubmittingAction("bulk-delete")
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/orders/bulk-delete`, {
+      const res = await fetch("/api/admin/orders/bulk-delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds) }),

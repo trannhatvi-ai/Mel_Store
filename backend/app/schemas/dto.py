@@ -56,10 +56,48 @@ class DebugSearchResultDTO(BaseModel):
     search_score: float
 
 
+class ModelOption(BaseModel):
+    id: str
+    label: str
+
+
+class ProviderOption(BaseModel):
+    id: str
+    label: str
+    models: list[ModelOption]
+
+
+class ModelCatalogResponse(BaseModel):
+    chat_providers: list[ProviderOption]
+    embedding_providers: list[ProviderOption]
+
+
+class AISettingsDTO(BaseModel):
+    chat_provider: str = "gemini"
+    chat_model: str = "gemini-2.0-flash"
+    embedding_provider: str = "gemini"
+    embedding_model: str = "gemini-embedding-001"
+    system_prompt: str | None = None
+
+
+class ModelTestRequestDTO(BaseModel):
+    prompt: str = "Please introduce yourself as the studio concierge in 2 short sentences."
+    settings: AISettingsDTO = Field(default_factory=AISettingsDTO)
+
+
+class ModelTestResponseDTO(BaseModel):
+    provider: str
+    model: str
+    prompt: str
+    answer: str
+
+
 class ChatRequestDTO(BaseModel):
     session_id: str
     message: str
     locale: str = "vi"
+    settings: AISettingsDTO = Field(default_factory=AISettingsDTO)
+    context: dict[str, Any] = Field(default_factory=dict)
 
 
 class ChatResponseDTO(BaseModel):

@@ -16,24 +16,22 @@ export function CategoriesTable() {
   const [isCreating, setIsCreating] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
-
   useEffect(() => {
-    fetch(`${apiBaseUrl}/api/admin/categories`)
+    fetch("/api/admin/categories")
       .then(r => r.json())
       .then(data => {
         setCategories(data)
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [apiBaseUrl])
+  }, [])
 
   async function handleSave() {
     if (!editForm || !editForm.id || !editForm.slug || !editForm.name.vi) return
     try {
       const isNew = isCreating
       const method = isNew ? "POST" : "PUT"
-      const url = isNew ? `${apiBaseUrl}/api/admin/categories` : `${apiBaseUrl}/api/admin/categories/${editForm.id}`
+      const url = isNew ? "/api/admin/categories" : `/api/admin/categories/${editForm.id}`
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -56,7 +54,7 @@ export function CategoriesTable() {
   async function handleDelete(id: string) {
     if (!window.confirm("Bạn có chắc chắn muốn xóa danh mục này?")) return
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/categories/${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Cannot delete")
       setCategories(categories.filter(c => c.id !== id))
     } catch (err) {

@@ -3,7 +3,7 @@ from collections.abc import Iterable
 import httpx
 
 from app.core.config import settings
-from app.schemas.admin import ModelOption, ProviderOption
+from app.schemas.dto import ModelOption, ProviderOption
 
 DEFAULT_GEMINI_CHAT = [
     "gemini-2.0-flash",

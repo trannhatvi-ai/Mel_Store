@@ -45,12 +45,10 @@ export default function AdminUsers() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
-
   const fetchUsers = async () => {
     setFetching(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/users`)
+      const res = await fetch("/api/admin/users")
       if (res.ok) {
         const data = await res.json()
         setUsers(data)
@@ -95,7 +93,7 @@ export default function AdminUsers() {
 
     setLoading(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/users`, {
+      const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,7 +125,7 @@ export default function AdminUsers() {
     if (!deleteTarget?.id) return
     setDeletingId(deleteTarget.id)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/users/${deleteTarget.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/users/${deleteTarget.id}`, { method: "DELETE" })
       if (!res.ok) {
         throw new Error("Failed to delete")
       }

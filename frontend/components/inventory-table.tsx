@@ -74,17 +74,15 @@ export function InventoryTable() {
   const [form, setForm] = useState<ProductFormState>(emptyForm)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
-
   const fetchProducts = async () => {
     setFetching(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/products`)
+      const res = await fetch("/api/admin/products")
       if (res.ok) {
         const data = await res.json()
         setProducts(data)
       } else {
-        console.error("Backend error:", res.status)
+        console.error("Products API error:", res.status)
       }
     } catch (err) {
       console.error("Fetch error:", err)
@@ -191,7 +189,7 @@ export function InventoryTable() {
 
     setLoading(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/products`, {
+      const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -227,7 +225,7 @@ export function InventoryTable() {
       console.error("Save failed:", err)
       toast({
         title: "Connection error",
-        description: "Cannot connect to backend. Please try again.",
+        description: "Cannot connect to the server. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -240,7 +238,7 @@ export function InventoryTable() {
 
     setDeletingId(deleteTarget.id)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/admin/products/${deleteTarget.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/products/${deleteTarget.id}`, { method: "DELETE" })
       if (!res.ok) {
         let message = "Delete failed"
         try {
@@ -266,7 +264,7 @@ export function InventoryTable() {
       console.error("Delete failed:", err)
       toast({
         title: "Connection error",
-        description: "Cannot connect to backend. Please try again.",
+        description: "Cannot connect to the server. Please try again.",
         variant: "destructive",
       })
     } finally {

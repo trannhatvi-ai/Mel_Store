@@ -17,8 +17,6 @@ export function AiChatButton() {
   const [loading, setLoading] = useState(false)
   const [sessionId] = useState(() => "web-" + Math.random().toString(36).slice(2))
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
-
   useEffect(() => {
     setMessages((m) => {
       if (m.length === 1 && m[0].role === "ai") {
@@ -50,7 +48,7 @@ export function AiChatButton() {
     setAbortCtrl(ctrl)
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/chat`, {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

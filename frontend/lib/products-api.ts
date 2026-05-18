@@ -19,7 +19,6 @@ export function useProductsFromApi() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
 
   useEffect(() => {
     let active = true
@@ -28,7 +27,7 @@ export function useProductsFromApi() {
 
     void (async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/api/admin/products`)
+        const res = await fetch("/api/admin/products")
         if (!res.ok) throw new Error(`Failed to load products (${res.status})`)
         const data = (await res.json()) as ApiProduct[]
         if (active) setProducts(data.map(normalizeProduct))
@@ -42,7 +41,7 @@ export function useProductsFromApi() {
     return () => {
       active = false
     }
-  }, [apiBaseUrl])
+  }, [])
 
   const bySlug = useMemo(() => {
     const m = new Map<string, Product>()

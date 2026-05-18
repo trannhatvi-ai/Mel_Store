@@ -38,9 +38,9 @@ Mọi sản phẩm và dịch vụ đều có chi tiết bảng giá, thông tin
 ## Công Nghệ Sử Dụng
 
 Nền tảng được xây dựng dựa trên các công nghệ tiên tiến nhất nhằm đảm bảo hiệu năng, tính ổn định và bảo mật:
-- **Frontend:** Next.js (App Router), React, TailwindCSS, Framer Motion mang đến giao diện UX/UI đẳng cấp.
-- **Backend:** FastAPI (Python), tích hợp LangChain/LangGraph cho luồng suy luận của AI.
-- **Database:** PostgreSQL kèm PgVector cho lưu trữ dữ liệu dạng Vector, tối ưu truy vấn AI RAG.
+- **Frontend:** Next.js App Router, React, TailwindCSS, Framer Motion, route API server-side, và toàn bộ truy cập PostgreSQL qua `DATABASE_URL`.
+- **Backend AI:** FastAPI (Python), tích hợp LangChain/LangGraph cho luồng suy luận của AI, nhận dữ liệu catalog/chính sách từ frontend thay vì kết nối database.
+- **Database:** PostgreSQL được truy cập từ frontend API routes; backend không giữ cấu hình database.
 - **Mô Hình AI:** Hỗ trợ linh hoạt các mô hình ngôn ngữ lớn (Gemini, Claude, GPT) theo cấu hình hệ thống.
 
 ---

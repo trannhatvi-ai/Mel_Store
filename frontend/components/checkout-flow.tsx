@@ -43,8 +43,6 @@ export function CheckoutFlow({
   const [fileBase64, setFileBase64] = useState<string>("")
   const [uploading, setUploading] = useState(false)
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
-
   const isRental = !!p.pricePerDay
   const days = isRental ? diffDays(initialStart, initialEnd) : 1
   const subtotal = p.price * (isRental ? days : 1) * initialQty
@@ -71,7 +69,7 @@ export function CheckoutFlow({
     if (step === 1 && !createdOrder) {
       setCreating(true)
       try {
-        const res = await fetch(`${apiBaseUrl}/api/orders`, {
+        const res = await fetch("/api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -117,7 +115,7 @@ export function CheckoutFlow({
     if (!fileBase64 || !createdOrder) return
     setUploading(true)
     try {
-      const res = await fetch(`${apiBaseUrl}/api/orders/${createdOrder.id}/proof`, {
+      const res = await fetch(`/api/orders/${createdOrder.id}/proof`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proof: fileBase64 })

@@ -36,10 +36,9 @@ export function PromotionsTable() {
   const [categoryFilter, setCategoryFilter] = useState<"All" | Category>("All")
 
   useEffect(() => {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
     void (async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/api/admin/products`)
+        const res = await fetch("/api/admin/products")
         if (res.ok) setProducts(await res.json())
       } catch (err) {
         console.error("Failed to load products:", err)

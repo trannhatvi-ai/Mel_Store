@@ -175,7 +175,7 @@ export const products: Product[] = [
   },
 ]
 
-export type OrderStatus = "Awaiting Deposit" | "Paid" | "Service Ongoing" | "Completed" | "Cancelled"
+export type OrderStatus = "AWAITING_DEPOSIT" | "PAID" | "SERVICE_ONGOING" | "COMPLETED" | "CANCELLED"
 
 export type Order = {
   id: string
@@ -199,7 +199,7 @@ export const orders: Order[] = [
     items: [{ productId: "pk1", qty: 1, price: 12_500_000 }],
     total: 12_500_000,
     deposit: 2_500_000,
-    status: "Paid",
+    status: "PAID",
     createdAt: "2026-04-12",
     eventDate: "2026-05-18",
   },
@@ -211,7 +211,7 @@ export const orders: Order[] = [
     items: [{ productId: "p1", qty: 1, price: 1_200_000, days: 3 }],
     total: 3_600_000,
     deposit: 720_000,
-    status: "Awaiting Deposit",
+    status: "AWAITING_DEPOSIT",
     createdAt: "2026-04-20",
     eventDate: "2026-05-04",
   },
@@ -226,7 +226,7 @@ export const orders: Order[] = [
     ],
     total: 8_560_000,
     deposit: 1_712_000,
-    status: "Service Ongoing",
+    status: "SERVICE_ONGOING",
     createdAt: "2026-04-08",
     eventDate: "2026-04-26",
   },
@@ -238,7 +238,7 @@ export const orders: Order[] = [
     items: [{ productId: "p3", qty: 1, price: 1_100_000, days: 2 }],
     total: 2_200_000,
     deposit: 440_000,
-    status: "Completed",
+    status: "COMPLETED",
     createdAt: "2026-03-28",
     eventDate: "2026-04-10",
   },
@@ -250,7 +250,7 @@ export const orders: Order[] = [
     items: [{ productId: "pk3", qty: 1, price: 4_500_000 }],
     total: 4_500_000,
     deposit: 900_000,
-    status: "Cancelled",
+    status: "CANCELLED",
     createdAt: "2026-03-21",
     eventDate: "2026-04-02",
   },

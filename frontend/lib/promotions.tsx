@@ -1,8 +1,6 @@
 "use client"
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { products } from "./data"
-
 export type Promotion = {
   trending: boolean
   discount: number
@@ -17,8 +15,6 @@ type PromotionsContextValue = {
   hydrated: boolean
   saving: boolean
 }
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
 
 const PromotionsContext = createContext<PromotionsContextValue>({
   promotions: {},
@@ -36,7 +32,7 @@ export function PromotionsProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     void (async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/api/admin/products`)
+        const res = await fetch("/api/admin/products")
         if (res.ok) {
           const data = await res.json()
           const m: PromotionsMap = {}
@@ -67,7 +63,7 @@ export function PromotionsProvider({ children }: { children: React.ReactNode }) 
 
     setSaving(true)
     try {
-      await fetch(`${apiBaseUrl}/api/admin/products/${id}/promo`, {
+      await fetch(`/api/admin/products/${id}/promo`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),

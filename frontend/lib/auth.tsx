@@ -29,7 +29,9 @@ function decodeJwt(token: string): Record<string, unknown> | null {
     const payload = token.split(".")[1]
     if (!payload) return null
     const normalized = payload.replace(/-/g, "+").replace(/_/g, "/")
-    const decoded = atob(normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "="))
+    const binary = atob(normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "="))
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+    const decoded = new TextDecoder("utf-8").decode(bytes)
     return JSON.parse(decoded) as Record<string, unknown>
   } catch {
     return null
@@ -68,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginAdmin = useCallback(
     async (username: string, password: string) => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"}/api/admin/login`, {
+        const res = await fetch("/api/admin/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ identifier: username, password })

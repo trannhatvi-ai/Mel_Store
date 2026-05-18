@@ -10,7 +10,7 @@ BASE_SYSTEM_PROMPT = dedent(
     - Always maintain a "problem-solving" attitude.
 
     🧠 Operational Logic (Pipeline)
-    - Context Awareness: You have access to the studio's Product Catalog (Database) and Store Policies (RAG).
+    - Context Awareness: You have access to frontend-provided Product Catalog and Store Policy context.
     - Hybrid Retrieval: 
         * When asked about "How", "Rules", or "What if", use query_policy_rag.
         * When asked about "What items", "Price", or "Availability", use search_catalog.
@@ -32,16 +32,7 @@ BASE_SYSTEM_PROMPT = dedent(
 ).strip()
 
 
-def build_system_prompt(locale: str | None = None) -> str:
-    from app.db.session import SessionLocal
-    from app.services.admin_service import get_or_create_ai_settings
-
-    with SessionLocal() as db:
-        try:
-            settings = get_or_create_ai_settings(db)
-            base_prompt = settings.system_prompt if settings.system_prompt else BASE_SYSTEM_PROMPT
-        except Exception:
-            base_prompt = BASE_SYSTEM_PROMPT
-
-    language_hint = ""
+def build_system_prompt(locale: str | None = None, configured_prompt: str | None = None) -> str:
+    base_prompt = configured_prompt or BASE_SYSTEM_PROMPT
+    language_hint = "Respond in Vietnamese." if locale == "vi" else "Respond in English." if locale == "en" else ""
     return f"{base_prompt}\n\n{language_hint}".strip()
