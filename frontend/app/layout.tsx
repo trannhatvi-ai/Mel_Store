@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
+import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import { LanguageProvider } from "@/lib/i18n"
 import { PromotionsProvider } from "@/lib/promotions"
@@ -20,6 +21,8 @@ const playfair = Playfair_Display({
   display: "swap",
 })
 
+const googleAdsId = "AW-18166159010"
+
 export const metadata: Metadata = {
   title: "Feli Studio — Vintage Wedding Photography & Dress Rental",
   description:
@@ -38,6 +41,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} bg-background`} suppressHydrationWarning>
       <body className="font-sans antialiased text-foreground">
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`} strategy="afterInteractive" />
+        <Script id="google-ads-tag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${googleAdsId}');
+          `}
+        </Script>
         <AuthProvider>
           <LanguageProvider>
             <PromotionsProvider>
